@@ -78,7 +78,7 @@ def aktifkanTweak():
     for command in listCommand:
         os.system(command)
         print(f"[✓✓]. Mengeksekusi command {command}")
-        time.sleep(0.1)
+        time.sleep(0.3)
     print(line)
     ubahResolusi = input("[??]. Ubah resolusi menjadi 50% (Recomended) [y/t]: ")
     if ubahResolusi.lower() == "y":
@@ -91,6 +91,7 @@ def aktifkanTweak():
         if packageName != "com.termux":
             os.system(f"adb shell am force-stop {packageName}")
             print(f"[✓✓]. Force stop aplikasi {packageName}")
+            time.sleep(0.3)
     print(line)
     print("[**]. Tekan enter sekarang")
     print("[**]. Akan otomatis keluar apk termux")
