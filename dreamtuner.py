@@ -95,6 +95,7 @@ def aktifkanTweak():
     print("[**]. Tekan enter sekarang")
     print("[**]. Akan otomatis keluar apk termux")
     input("[ ENTER ]")
+    os.system("adb shell am force-stop com.termux")
 
 def ubahResolusiDpi():
     getResolution = os.popen("adb shell wm size").read().split("\n")[0]
