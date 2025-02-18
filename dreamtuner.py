@@ -89,7 +89,7 @@ def aktifkanTweak():
     for pack in listPackage:
         packageName = pack.replace("package:", "")
         if packageName != "com.termux":
-            os.system("adb shell am force-stop {packageName}")
+            os.system(f"adb shell am force-stop {packageName}")
             print(f"[✓✓]. Force stop aplikasi {packageName}")
     print(line)
     print("[**]. Tekan enter sekarang")
