@@ -1,3 +1,9 @@
+"""
+DreamTuner
+Tweak Gaming No Root
+versi 1.1
+"""
+
 import os, time
 
 line = "="*36
