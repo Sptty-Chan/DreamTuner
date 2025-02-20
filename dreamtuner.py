@@ -1,7 +1,7 @@
 """
 DreamTuner
 Tweak Gaming No Root
-versi 1.1
+versi 1.2
 """
 
 import os, time
@@ -170,11 +170,11 @@ def adbPermanenNoReboot():
 def autoUpdate():
     gitPull = os.popen("git pull").read()
     if "Already up to date." not in gitPull:
-        try:
-            os.system("git pull")
+        updater = os.popen("git pull").read()
+        if "fatal:" not in updater:
             print("[✓✓]. Tweak baru saja diupdate, jalankan ulang untuk menggunakan.")
             exit()
-        except Exception as e:
+        else:
             print(f"[!!]. Update error: {e}")
             time.sleep(2)
         
