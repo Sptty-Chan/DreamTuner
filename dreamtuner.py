@@ -168,15 +168,14 @@ def adbPermanenNoReboot():
     time.sleep(2)
 
 def autoUpdate():
-    gitPull = os.popen("git pull").read()
-    if "Already up to date." not in gitPull:
-        updater = os.popen("git pull").read()
-        if "fatal:" not in updater:
+    try:
+        gitPull = os.popen("git pull").read()
+        if "Already up to date." not in gitPull:
             print("[✓✓]. Tweak baru saja diupdate, jalankan ulang untuk menggunakan.")
             exit()
-        else:
-            print(f"[!!]. Update error: {e}")
-            time.sleep(2)
+    except Exception as e:
+        print(f"[!!]. Update error: {e}")
+        time.sleep(2)
         
 if __name__=="__main__":
     autoUpdate()
