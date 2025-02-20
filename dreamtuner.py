@@ -174,7 +174,7 @@ def autoUpdate():
             print("[✓✓]. Tweak baru saja diupdate, jalankan ulang untuk menggunakan.")
             exit()
         print(f"[!!]. Update error, script masih bisa digunakan dengan versi saat ini")
-        time.sleep(2)
+        time.sleep(3)
         
 if __name__=="__main__":
     autoUpdate()
