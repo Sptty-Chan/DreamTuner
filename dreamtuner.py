@@ -2,11 +2,15 @@ import os, time
 
 line = "="*36
 
-def menu():
+def banner():
     os.system("clear")
     print(f"╔╦╗┬─┐┌─┐┌─┐┌┬┐  ┌┬┐┬ ┬┌┐┌┌─┐┬─┐\n ║║├┬┘├┤ ├─┤│││───│ │ ││││├┤ ├┬┘\n═╩╝┴└─└─┘┴ ┴┴ ┴   ┴ └─┘┘└┘└─┘┴└─\n{line}\n[!] Pastikan sudah mengikuti tutorial dengan benar.\n{line}")
-    print("[01]. Aktifkan tweak")
-    print("[02]. Reset resolusi & dpi layar")
+
+def menu():
+    banner()
+    print("[01]. Aktifkan semua tweak (Termasuk force stop & hapus cache - aktifkan 1x saja setiap reboot)")
+    print("[02]. Hapus cache & force stop only (Gunakan setiap ingin bermain game)")
+    print("[03]. Reset resolusi & dpi layar ke resolusi & dpi asli")
     print("[00]. Exit")
     print(line)
     pilih = input("[??]. Pilih: ")
@@ -14,6 +18,8 @@ def menu():
     if pilih == "1" or pilih == "01":
         aktifkanTweak()
     elif pilih == "2" or pilih == "02":
+        forceStopApp(deb=1)
+    elif pilih == "3" or pilih == "03":
         resetLayar()
     else:
         print("[**]. Terimakasih, sampai jumpa...")
@@ -80,10 +86,32 @@ def aktifkanTweak():
         print(f"[✓✓]. Mengeksekusi command {command}")
         time.sleep(0.3)
     print(line)
-    ubahResolusi = input("[??]. Ubah resolusi menjadi 50% (Recomended) [y/t]: ")
-    if ubahResolusi.lower() == "y":
-        ubahResolusiDpi()
+    print("[**]. 50% adalah setengah dari resolusi & dpi asli")
+    print("[**]. 70% adalah 70% dari resolusi & dpi asli")
+    print("[**]. 90% adalah 90% dari resolusi & dpi asli")
+    print("[**]. Semakin kecil persentasi layar yang digunakan akan semakin cepat performanya")
+    print("[**]. Semakin kecil persentasi layar yang digunakan akan semakin kabur layar / grafik di game")
+    print("[**]. Pengaturan ini bisa direset pada fitur no 3 di menu utama")
     print(line)
+    print("[01]. Turunkan resolusi & dpi layar (50% dari aslinya)")
+    print("[02]. Turunkan resolusi & dpi layar (70% dari aslinya)")
+    print("[03]. Turunkan resolusi & dpi layar (90% dari aslinya)")
+    print("[00]. Skip (resolusi & dpi (tidak diubah/diturunkan)")
+    ubahResolusi = input("[??]. Pilih: ")
+    if int(ubahResolusi) == 1:
+        ubahResolusiDpi(1)
+    elif int(ubahResolusi) == 2:
+        ubahResolusiDpi(2)
+    elif int(ubahResolusi) == 3:
+        ubahResolusiDpi(3)
+    print(line)
+    forceStopApp()
+
+def forceStopApp(deb=0):
+    if deb:
+        os.system("adb shell pm trim-caches 999G")
+        print("[✓✓]. Menghapus cache semua apkikasi")
+        time.sleep(0.3)
     listPackage = os.popen("adb shell pm list packages -3").read().split("\n")
     del listPackage[-1]
     for pack in listPackage:
@@ -98,16 +126,49 @@ def aktifkanTweak():
     input("[ ENTER ]")
     os.system("adb shell am force-stop com.termux")
 
-def ubahResolusiDpi():
+def ubahResolusiDpi(rasio):
     getResolution = os.popen("adb shell wm size").read().split("\n")[0]
     width, height = getResolution.replace("Physical size: ", "").split("x")
     getDpi = os.popen("adb shell wm density").read().split("\n")[0]
     dpi = getDpi.replace("Physical density: ", "")
-    width, height, dpi = int(width) // 2, int(height) // 2, int(dpi) // 2
+    if rasio == 1:
+        width = int((int(width) / 100) * 50)
+        height = int((int(height) / 100) * 50)
+        dpi = int((int(dpi) / 100) * 50)
+    elif rasio == 2:
+        width = int((int(width) / 100) * 70)
+        height = int((int(height) / 100) * 70)
+        dpi = int((int(dpi) / 100) * 70)
+    elif rasio == 3:
+        width = int((int(width) / 100) * 90)
+        height = int((int(height) / 100) * 90)
+        dpi = int((int(dpi) / 100) * 90)
     os.system(f"adb shell wm size {width}x{height}")
     os.system(f"adb shell wm density {dpi}")
     print("[✓✓]. Tunggu sebentar...")
     time.sleep(2)
 
+def adbPermanenNoReboot():
+    banner()
+    print("[**]. Tunggu sebentar, memulai server...")
+    print("[**]. Mengubah koneksi adb shell menjadi permanen sampai perangkat dimulai ulang.")
+    print(line)
+    os.system("adb tcpip 5555")
+    os.system("adb connect localhost")
+    os.system("adb kill-server")
+    os.system("adb start-server")
+    print(line)
+    print("[✓✓]. Berhasil, dialihkan dalam 2 detik...")
+    time.sleep(2)
+
+def autoUpdate():
+    gitPull = os.popen("git pull").read()
+    if "Already up to date." not in gitPull:
+        os.system("git pull")
+        print("[✓✓]. Tweak baru saja diupdate, jalankan ulang untuk menggunakan.")
+        exit()
+
 if __name__=="__main__":
+    autoUpdate()
+    adbPermanenNoReboot()
     menu()
