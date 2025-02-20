@@ -170,7 +170,7 @@ def adbPermanenNoReboot():
 def autoUpdate():
     gitPull = os.popen("git pull").read()
     if "Already up to date." not in gitPull:
-        if gitPull != "" and "error:" not in gitPull:
+        if gitPull != "" and "file changed" in gitPull:
             print("[✓✓]. Tweak baru saja diupdate, jalankan ulang untuk menggunakan.")
             exit()
         print(f"[!!]. Update error, script masih bisa digunakan dengan versi saat ini")
