@@ -1,7 +1,7 @@
 """
 DreamTuner
 Tweak Gaming No Root
-versi 1.3
+versi 1.4
 """
 
 import os, time
