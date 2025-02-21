@@ -4,7 +4,7 @@ Tweak Gaming No Root
 versi 1.5
 """
 
-import os, time
+import os, time, re
 
 line = "="*36
 
@@ -16,7 +16,9 @@ def menu():
     banner()
     print("[01]. Aktifkan semua tweak (Termasuk force stop & hapus cache - aktifkan 1x saja setiap reboot)")
     print("[02]. Hapus cache & force stop only (Gunakan setiap ingin bermain game)")
-    print("[03]. Reset resolusi & dpi layar ke resolusi & dpi asli")
+    print("[03]. Ubah resolusi & dpi only")
+    print("[04]. Reset resolusi & dpi layar ke resolusi & dpi asli")
+    print("[05]. Aktifkan tweak hemat baterai (aktifkan kembali tweak no 1 jika ingin main game)")
     print("[00]. Exit")
     print(line)
     pilih = input("[??]. Pilih: ")
@@ -26,7 +28,11 @@ def menu():
     elif pilih == "2" or pilih == "02":
         forceStopApp(deb=1)
     elif pilih == "3" or pilih == "03":
+        menuResolusi(main=1)
+    elif pilih == "4" or pilih == "04":
         resetLayar()
+    elif pilih == "5" or pilih == "05":
+        modeHematBaterai()
     else:
         print("[**]. Terimakasih, sampai jumpa...")
         exit()
@@ -87,10 +93,73 @@ def aktifkanTweak():
         "adb shell settings put system performance_mode 1",
         "adb shell cmd power set-fixed-performance-mode-enabled true"
     ]
+    getRamInfo = os.popen("adb shell cat /proc/meminfo | grep MemTotal").read().replace("\n", "")
+    ramSize = int(re.search("(\d+)", getRamInfo).group(1))
+    if ramSize >= 1900000:
+        listCommand.append("adb shell settings put global zram_enabled 0")
     for command in listCommand:
         os.system(command)
         print(f"[✓✓]. Mengeksekusi command {command}")
         time.sleep(0.3)
+    menuResolusi()
+
+def modeHematBaterai():
+    listCommand = [
+        "adb shell pm trim-caches 9999G",
+        "adb shell setprop debug.egl.hw 1",
+        "adb shell setprop debug.sf.hw 1",
+        "adb shell setprop debug.composition.type cpu",
+        "adb shell setprop debug.overlayui.enable 0",
+        "adb shell setprop debug.force-opengl 0",
+        "adb shell setprop debug.window.anim.fps 0",
+        "adb shell setprop debug.sf.vsync 0",
+        "adb shell setprop debug.sf.low_latency 0",
+        "adb shell setprop debug.hwui.use_gpu 0",
+        "adb shell settings put global window_animation_scale 0",
+        "adb shell settings put global transition_animation_scale 0",
+        "adb shell settings put global animator_duration_scale 0",
+        "adb shell settings put global dev.pm.dyn_samplingrate 1",
+        "adb shell settings put global touch.presure.scale 0.001",
+        "adb shell settings put global disable_window_blurs 1",
+        "adb shell settings put global accessibility_reduce_transparency 1",
+        "adb shell settings put global activity_starts_logging_enabled 0",
+        "adb shell settings put global zram_enabled 1",
+        "adb shell settings put global automatic_power_save_mode 1",
+        "adb shell settings put global adaptive_battery_management_enabled 1",
+        "adb shell settings put global net.tcp.buffersize.default 2048,65536,131072,2048,8192,131072",
+        "adb shell settings put global net.tcp.buffersize.wifi 2048,65536,131072,2048,8192,131072",
+        "adb shell settings put global net.tcp.buffersize.umts 2048,65536,131072,2048,8192,131072",
+        "adb shell settings put global net.tcp.buffersize.gprs 2048,65536,131072,2048,8192,131072",
+        "adb shell settings put global net.tcp.buffersize.edge 2048,65536,131072,2048,8192,131072",
+        "adb shell settings put global net.tcp.buffersize.hspa 4096,65536,262144,4096,8192,262144",
+        "adb shell settings put global net.tcp.buffersize.lte 262144,524288,1048576,262144,524288,1048576",
+        "adb shell settings put global net.tcp.buffersize.hsdpa 4096,65536,1048576,4096,65536,1048576",
+        "adb shell settings put global net.tcp.buffersize.evdo_b 4096,65536,1048576,4096,65536,1048576",
+        "adb shell settings put global net.rmnet0.dns1 8.8.8.8",
+        "adb shell settings put global net.rmnet0.dns2 8.8.4.4",
+        "adb shell settings put global net.dns1 8.8.8.8",
+        "adb shell settings put global net.dns2 8.8.4.4",
+        "adb shell settings put global net.ppp0.dns1 8.8.8.8",
+        "adb shell settings put global net.ppp0.dns2 8.8.4.4",
+        "adb shell settings put global net.wlan0.dns1 8.8.8.8",
+        "adb shell settings put global net.wlan0.dns2 8.8.4.4",
+        "adb shell settings put global net.eth0.dns1 8.8.8.8",
+        "adb shell settings put global net.eth0.dns2 8.8.4.4",
+        "adb shell settings put global net.gprs.dns1 8.8.8.8",
+        "adb shell settings put global net.gprs.dns2 8.8.4.4",
+        "adb shell settings put system rakuten_denwa 0",
+        "adb shell settings put system send_security_reports 0",
+        "adb shell settings put system multicore_packet_scheduler 0",
+        "adb shell settings put secure send_action_app_error 0",
+        "adb shell settings put system performance_mode 0",
+        "adb shell cmd power set-fixed-performance-mode-enabled false"
+    ]
+    for command in listCommand:
+        os.system(command)
+        print(f"[✓✓]. Mengeksekusi command {command}")
+        time.sleep(0.3)
+
+def menuResolusi(main=0):
     print(line)
     print("[**]. 50% adalah setengah dari resolusi & dpi asli")
     print("[**]. 70% adalah 70% dari resolusi & dpi asli")
@@ -110,8 +179,9 @@ def aktifkanTweak():
         ubahResolusiDpi(2)
     elif int(ubahResolusi) == 3:
         ubahResolusiDpi(3)
-    print(line)
-    forceStopApp()
+    if not main:
+        print(line)
+        forceStopApp()
 
 def forceStopApp(deb=0):
     if deb:
