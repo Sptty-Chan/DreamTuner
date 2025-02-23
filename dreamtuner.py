@@ -1,7 +1,7 @@
 """
 DreamTuner
 Tweak Gaming No Root
-versi 1.6
+versi 2.0
 """
 
 import os, time, re
@@ -46,6 +46,7 @@ def resetLayar():
 def aktifkanTweak():
     listCommand = [
         "adb shell pm trim-caches 9999G",
+        "adb shell setprop debug.hwui.render_dirty_regions true",
         "adb shell setprop debug.egl.hw 1",
         "adb shell setprop debug.sf.hw 1",
         "adb shell setprop debug.composition.type gpu",
@@ -106,8 +107,9 @@ def aktifkanTweak():
 def modeHematBaterai():
     listCommand = [
         "adb shell pm trim-caches 9999G",
-        "adb shell setprop debug.egl.hw 1",
-        "adb shell setprop debug.sf.hw 1",
+        "adb shell setprop debug.hwui.render_dirty_regions true",
+        "adb shell setprop debug.egl.hw 0",
+        "adb shell setprop debug.sf.hw 0",
         "adb shell setprop debug.composition.type cpu",
         "adb shell setprop debug.overlayui.enable 0",
         "adb shell setprop debug.force-opengl 0",
@@ -184,13 +186,28 @@ def menuResolusi(main=0):
         forceStopApp()
 
 def forceStopApp(deb=0):
+    includeSystem = input("[??]. Juga paksa berhenti aplikasi sistem [y/t] (eksperimental): ")
+    print(line)
+    if includeSystem.lower() == "y":
+        listPackage = os.popen("adb shell pm list packages").read().split("\n")
+        del listPackage[-1]
+        listPackage = [pack.replace("package:", "") for pack in listPackage]
+        allListPackage = []
+        for pack in listPackage:
+            acc = os.popen(f"adb shell \"cmd package resolve-activity --brief {pack} | tail -n 1\"").read()
+            if "No activity found" not in acc and pack not in allListPackage:
+                allListPackage.append(pack)
+            print(f"\r[..]. Mengambil list aplikasi terinstall [{len(allListPackage)}]", end="")
+        print("\r[✓✓]. Selesai mengambil list aplkasi")
+        print(line)
+    else:
+        allListPackage = os.popen("adb shell pm list packages -3").read().split("\n")
+        del allListPackage[-1]
     if deb:
         os.system("adb shell pm trim-caches 999G")
         print("[✓✓]. Menghapus cache semua apkikasi")
         time.sleep(0.3)
-    listPackage = os.popen("adb shell pm list packages -3").read().split("\n")
-    del listPackage[-1]
-    for pack in listPackage:
+    for pack in allListPackage:
         packageName = pack.replace("package:", "")
         if packageName != "com.termux":
             os.system(f"adb shell am force-stop {packageName}")
