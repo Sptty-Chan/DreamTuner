@@ -14,8 +14,8 @@ def banner():
 
 def menu():
     banner()
-    print("[01]. Aktifkan semua tweak (Termasuk force stop & hapus cache - aktifkan 1x saja setiap reboot)")
-    print("[02]. Hapus cache & force stop only (Gunakan setiap ingin bermain game)")
+    print("[01]. Aktifkan semua tweak (semua tweak. aktifkan 1x saja setiap reboot)")
+    print("[02]. Game launcher (Gunakan setiap ingin bermain game)")
     print("[03]. Ubah resolusi & dpi only")
     print("[04]. Reset resolusi & dpi layar ke resolusi & dpi asli")
     print("[05]. Aktifkan tweak hemat baterai (aktifkan kembali tweak no 1 jika ingin main game)")
@@ -65,7 +65,6 @@ def aktifkanTweak():
         "adb shell settings put global accessibility_reduce_transparency 1",
         "adb shell settings put global activity_starts_logging_enabled 0",
         "adb shell settings put global automatic_power_save_mode 0",
-        "adb shell settings put global adaptive_battery_management_enabled 0",
         "adb shell settings put global net.tcp.buffersize.default 4096,87380,256960,4096,16384,256960",
         "adb shell settings put global net.tcp.buffersize.wifi 4096,87380,256960,4096,16384,256960",
         "adb shell settings put global net.tcp.buffersize.umts 4096,87380,256960,4096,16384,256960",
@@ -96,7 +95,7 @@ def aktifkanTweak():
     ]
     getRamInfo = os.popen("adb shell cat /proc/meminfo | grep MemTotal").read().replace("\n", "")
     ramSize = int(re.search("(\d+)", getRamInfo).group(1))
-    if ramSize >= 1900000:
+    if ramSize >= 2900000:
         listCommand.append("adb shell settings put global zram_enabled 0")
     for command in listCommand:
         os.system(command)
@@ -127,7 +126,6 @@ def modeHematBaterai():
         "adb shell settings put global activity_starts_logging_enabled 0",
         "adb shell settings put global zram_enabled 1",
         "adb shell settings put global automatic_power_save_mode 1",
-        "adb shell settings put global adaptive_battery_management_enabled 1",
         "adb shell settings put global net.tcp.buffersize.default 2048,65536,131072,2048,8192,131072",
         "adb shell settings put global net.tcp.buffersize.wifi 2048,65536,131072,2048,8192,131072",
         "adb shell settings put global net.tcp.buffersize.umts 2048,65536,131072,2048,8192,131072",
@@ -166,15 +164,16 @@ def menuResolusi(main=0):
     print("[**]. 50% adalah setengah dari resolusi & dpi asli")
     print("[**]. 70% adalah 70% dari resolusi & dpi asli")
     print("[**]. 90% adalah 90% dari resolusi & dpi asli")
-    print("[**]. Semakin kecil persentasi layar yang digunakan akan semakin cepat performanya")
-    print("[**]. Semakin kecil persentasi layar yang digunakan akan semakin kabur layar / grafik di game")
+    print("[**]. Pengurangan resolusi tidak selalu meningkatkan performa, silahkan coba satu persatu")
     print("[**]. Pengaturan ini bisa direset pada fitur no 3 di menu utama")
     print(line)
     print("[01]. Turunkan resolusi & dpi layar (50% dari aslinya)")
     print("[02]. Turunkan resolusi & dpi layar (70% dari aslinya)")
     print("[03]. Turunkan resolusi & dpi layar (90% dari aslinya)")
     print("[00]. Skip (resolusi & dpi (tidak diubah/diturunkan)")
+    print(line)
     ubahResolusi = input("[??]. Pilih: ")
+    print(line)
     if int(ubahResolusi) == 1:
         ubahResolusiDpi(1)
     elif int(ubahResolusi) == 2:
@@ -186,38 +185,58 @@ def menuResolusi(main=0):
         forceStopApp()
 
 def forceStopApp(deb=0):
-    includeSystem = input("[??]. Juga paksa berhenti aplikasi sistem [y/t] (eksperimental): ")
+    listPackage = os.popen("adb shell pm list packages").read().split("\n")
+    del listPackage[-1]
+    listPackage = [pack.replace("package:", "") for pack in listPackage]
+    allListPackage = []
+    for pack in listPackage:
+        acc = os.popen(f"adb shell cmd package resolve-activity --brief {pack} | tail -n 1").read()
+        if "No activity found" not in acc and pack not in allListPackage:
+            allListPackage.append((pack, acc.replace("\n", "")))
+        print(f"\r[..]. Mengambil list aplikasi terinstall [{len(allListPackage)}]", end="")
+    print("\n[✓✓]. Selesai mengambil list aplkasi")
     print(line)
-    if includeSystem.lower() == "y":
-        listPackage = os.popen("adb shell pm list packages").read().split("\n")
-        del listPackage[-1]
-        listPackage = [pack.replace("package:", "") for pack in listPackage]
-        allListPackage = []
-        for pack in listPackage:
-            acc = os.popen(f"adb shell \"cmd package resolve-activity --brief {pack} | tail -n 1\"").read()
-            if "No activity found" not in acc and pack not in allListPackage:
-                allListPackage.append(pack)
-            print(f"\r[..]. Mengambil list aplikasi terinstall [{len(allListPackage)}]", end="")
-        print("\r[✓✓]. Selesai mengambil list aplkasi")
-        print(line)
-    else:
-        allListPackage = os.popen("adb shell pm list packages -3").read().split("\n")
-        del allListPackage[-1]
     if deb:
         os.system("adb shell pm trim-caches 999G")
         print("[✓✓]. Menghapus cache semua apkikasi")
         time.sleep(0.3)
     for pack in allListPackage:
-        packageName = pack.replace("package:", "")
-        if packageName != "com.termux":
-            os.system(f"adb shell am force-stop {packageName}")
-            print(f"[✓✓]. Force stop aplikasi {packageName}")
+        if pack[0] != "com.termux":
+            os.system(f"adb shell am force-stop {pack[0]}")
+            print(f"[✓✓]. Force stop aplikasi {pack[0]}")
             time.sleep(0.3)
+    gameLauncher(allListPackage)
+
+def gameLauncher(allListPackage):
     print(line)
-    print("[**]. Tekan enter sekarang")
-    print("[**]. Akan otomatis keluar apk termux")
-    input("[ ENTER ]")
-    os.system("adb shell am force-stop com.termux")
+    for pack in enumerate(allListPackage):
+        print(f"[{pack[0] + 1}]. {pack[1][0]}")
+    print(line)
+    appFLaunch = int(input(f"[??]. Pilih game untuk dimainkan (1 - {len(allListPackage)}): "))
+    print(line)
+    if appFLaunch >= 1 and appFLaunch <= len(allListPackage):
+        gameAct = allListPackage[appFLaunch - 1]
+        versiAndroid = int(os.popen("adb shell getprop ro.build.version.release").read().split("\n")[0])
+        if versiAndroid >= 9:
+            os.system(f"adb shell am set-standby-bucket {gameAct[0]} 10")
+            titik = "   "
+            print("[!!]. Harap tunggu sebentar")
+            for pack in allListPackage:
+                if pack[0] != gameAct[0] and pack[0] != "com.termux":
+                    os.system(f"adb shell am set-standby-bucket {pack[0]} 40")
+                    print(f"\r[..]. Membatasi alokasi resource untuk {len(allListPackage) - 1} aplikasi lainnya{titik}", end="")
+                    titik = ".  " if titik == "   " else ".. " if titik == ".  " else "..." if titik == ".. " else "   "
+            print("\n[✓✓]. Membuka aplikasi dalam 2 detik")
+            time.sleep(2)
+            os.system(f"adb shell am start -n {gameAct[1]} && adb shell am force-stop com.termux && adb shell am set-standby-bucket com.termux 40")
+        else:
+            print("[!!]. Perangkat saat ini tidak mendukung fitur aplikasi standby")
+            print("[✓✓]. Membuka aplikasi dalam 2 detik")
+            time.sleep(2)
+            os.system(f"adb shell am start -n {gameAct[1]} && adb shell am force-stop com.termux")
+    else:
+        print(f"[!!]. Pilihan nomor {appFLaunch} tidak ada")
+        exit()
 
 def ubahResolusiDpi(rasio):
     getResolution = os.popen("adb shell wm size").read().split("\n")[0]
@@ -244,7 +263,7 @@ def ubahResolusiDpi(rasio):
 def adbPermanenNoReboot():
     banner()
     print("[**]. Tunggu sebentar, memulai server...")
-    print("[**]. Mengubah koneksi adb shell menjadi permanen sampai perangkat dimulai ulang.")
+    print("[**]. Mengubah koneksi adb menjadi permanen sampai perangkat direboot.")
     print(line)
     os.system("adb tcpip 5555")
     os.system("adb connect localhost")
