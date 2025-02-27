@@ -260,11 +260,22 @@ def ubahResolusiDpi(rasio):
     print("[✓✓]. Tunggu sebentar...")
     time.sleep(2)
 
+def createConnection():
+    print("[**]. Adb tidak terhubung")
+    print("[**]. Ikuti tutorial dibawah untuk menghubungkan")
+    print("[**]. Link tutorial: https://www.facebook.com/100024425583446/videos/551942618004889/?app=fbl")
+    exit()
+
 def adbPermanenNoReboot():
     banner()
     print("[**]. Tunggu sebentar, memulai server...")
     print("[**]. Mengubah koneksi adb menjadi permanen sampai perangkat direboot.")
     print(line)
+    devices = os.popen("adb devices").read().split("\n")
+    devices = [dev for dev in devices if dev != ""]
+    del devices[0]
+    if len(devices) == 0:
+        createConnection()
     os.system("adb tcpip 5555")
     os.system("adb connect localhost")
     os.system("adb kill-server")
